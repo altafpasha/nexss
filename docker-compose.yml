@@ -3,7 +3,7 @@ services:
   # NeXSS Application
   # ==============================================
   app:
-    image: ghcr.io/mastomii/nexss
+    build: .
     container_name: nexss-app
     restart: unless-stopped
     environment:

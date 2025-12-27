@@ -45,12 +45,19 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     }
 }
 
+export interface LoginResult {
+    token?: string;
+    user: Omit<User, 'password'>;
+    requires2FA?: boolean;
+    userId?: string;
+}
+
 export async function login(
     username: string,
     password: string,
     ip?: string,
     userAgent?: string
-): Promise<{ token: string; user: Omit<User, 'password'> } | null> {
+): Promise<LoginResult | null> {
     const user = await queryOne<User>(
         'SELECT * FROM users WHERE username = $1 OR email = $1',
         [username]
@@ -65,22 +72,37 @@ export async function login(
         return null;
     }
 
+    const { password: _, ...userWithoutPassword } = user;
+
+    // Check if 2FA is enabled
+    if (user.totp_enabled) {
+        // Return partial result - requires 2FA verification
+        return {
+            user: userWithoutPassword,
+            requires2FA: true,
+            userId: user.id,
+        };
+    }
+
     const token = await createToken({
         userId: user.id,
         username: user.username,
         rank: user.rank,
     });
 
-    // Store session in database with ULID
+    // Store session in database with ULID (use ON CONFLICT to handle duplicate requests)
     const sessionId = generateId();
     const expiresAt = new Date(Date.now() + SESSION_DURATION);
     await query(
         `INSERT INTO user_sessions (id, user_id, token, ip_address, user_agent, expires_at) 
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (token) DO UPDATE SET 
+            ip_address = EXCLUDED.ip_address,
+            user_agent = EXCLUDED.user_agent,
+            expires_at = EXCLUDED.expires_at`,
         [sessionId, user.id, token, ip || null, userAgent || null, expiresAt]
     );
 
-    const { password: _, ...userWithoutPassword } = user;
     return { token, user: userWithoutPassword };
 }
 

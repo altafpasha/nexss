@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     rank INTEGER NOT NULL DEFAULT 1,
+    totp_secret VARCHAR(255),
+    totp_enabled BOOLEAN DEFAULT FALSE,
+    backup_codes TEXT,
+    totp_verified_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -140,6 +144,10 @@ const COLUMN_DEFINITIONS: Record<string, Record<string, string>> = {
         email: 'VARCHAR(255) NOT NULL',
         password: 'VARCHAR(255) NOT NULL',
         rank: 'INTEGER NOT NULL DEFAULT 1',
+        totp_secret: 'VARCHAR(255)',
+        totp_enabled: 'BOOLEAN DEFAULT FALSE',
+        backup_codes: 'TEXT',
+        totp_verified_at: 'TIMESTAMP WITH TIME ZONE',
         created_at: 'TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP',
         updated_at: 'TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP',
     },

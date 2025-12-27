@@ -10,6 +10,12 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     rank INTEGER NOT NULL DEFAULT 1, -- 1: user, 3: admin
+    -- 2FA fields
+    totp_secret VARCHAR(255), -- Encrypted TOTP secret
+    totp_enabled BOOLEAN DEFAULT FALSE,
+    backup_codes TEXT, -- JSON array of hashed backup codes
+    totp_verified_at TIMESTAMP WITH TIME ZONE,
+    -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

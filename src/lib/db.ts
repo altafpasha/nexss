@@ -58,6 +58,12 @@ export interface User {
   email: string;
   password: string;
   rank: number;
+  // 2FA fields
+  totp_secret: string | null;
+  totp_enabled: boolean;
+  backup_codes: string | null;
+  totp_verified_at: Date | null;
+  // Timestamps
   created_at: Date;
   updated_at: Date;
 }
