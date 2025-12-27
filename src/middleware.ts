@@ -12,6 +12,7 @@ const publicRoutes = [
     '/setup',
     '/api/auth/login',
     '/api/auth/logout',
+    '/api/auth/2fa/verify', // 2FA verification during login (before session is created)
     '/api/callback',
     '/api/persist', // POST only (XSS payload polling) - GET/PUT protected in route
     '/api/setup/health',
@@ -81,7 +82,7 @@ export async function middleware(request: NextRequest) {
         const response = pathname.startsWith('/api/')
             ? NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             : NextResponse.redirect(new URL('/login', request.url));
-        
+
         response.cookies.set('nexss_session', '', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -89,7 +90,7 @@ export async function middleware(request: NextRequest) {
             maxAge: 0,
             path: '/',
         });
-        
+
         return response;
     }
 }

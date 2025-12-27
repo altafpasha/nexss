@@ -27,6 +27,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Check if 2FA is required
+        if (result.requires2FA) {
+            await logAction(result.userId!, 'login_2fa_required', '2FA verification required', ip);
+            return NextResponse.json({
+                requires2FA: true,
+                userId: result.userId,
+                message: 'Two-factor authentication required',
+            });
+        }
+
         await logAction(result.user.id, 'login', 'User logged in', ip);
 
         // Create response with cookie
@@ -41,7 +51,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Set HTTP-only cookie for session
-        response.cookies.set('nexss_session', result.token, {
+        response.cookies.set('nexss_session', result.token!, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
