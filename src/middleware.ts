@@ -9,15 +9,20 @@ const JWT_SECRET = new TextEncoder().encode(
 // Routes that don't require authentication
 const publicRoutes = [
     '/login',
+    '/setup',
     '/api/auth/login',
     '/api/auth/logout',
     '/api/callback',
     '/api/persist', // POST only (XSS payload polling) - GET/PUT protected in route
+    '/api/setup/health',
+    '/api/setup/sync',
 ];
 
 // Routes that should be completely public (no redirect)
 const publicApiRoutes = [
     '/api/callback',
+    '/api/setup/health',
+    '/api/setup/sync',
 ];
 
 export async function middleware(request: NextRequest) {
@@ -45,6 +50,15 @@ export async function middleware(request: NextRequest) {
         pathname.includes('.')
     ) {
         return NextResponse.next();
+    }
+
+    // Check if DATABASE_URL is configured (basic check in middleware)
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl || databaseUrl.trim() === '') {
+        // Redirect to setup page if DATABASE_URL is not set
+        if (!pathname.startsWith('/setup') && !pathname.startsWith('/api/')) {
+            return NextResponse.redirect(new URL('/setup', request.url));
+        }
     }
 
     // Check for session cookie
