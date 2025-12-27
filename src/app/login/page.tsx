@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Loader2, ArrowRight } from 'lucide-react';
@@ -13,7 +13,32 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [checkingDb, setCheckingDb] = useState(true);
     const router = useRouter();
+
+    // Check database health on mount - redirect to setup if there's an issue
+    useEffect(() => {
+        const checkDbHealth = async () => {
+            try {
+                const res = await fetch('/api/setup/health?refresh=true');
+                const data = await res.json();
+                
+                // If database has any issue, redirect to setup
+                if (data.status !== 'ok') {
+                    router.replace('/setup');
+                    return;
+                }
+                
+                // Database is OK, show login form
+                setCheckingDb(false);
+            } catch {
+                // If health check fails, redirect to setup
+                router.replace('/setup');
+            }
+        };
+
+        checkDbHealth();
+    }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -45,6 +70,11 @@ export default function LoginPage() {
             <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[128px]" />
             <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[128px]" />
 
+            {checkingDb ? (
+                <div className="flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-white/50" />
+                </div>
+            ) : (
             <Card className="w-full max-w-md border border-[#27272a] bg-[#18181c] shadow-2xl relative z-10 rounded-lg overflow-hidden">
                 {/* Brand Header */}
                 <div className="h-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 w-full" />
@@ -115,6 +145,7 @@ export default function LoginPage() {
                     </div>
                 </CardContent>
             </Card>
+            )}
         </div>
     );
 }
